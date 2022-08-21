@@ -87,7 +87,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/astronomical_unit_explanation_button"
-                android:onClick="@{() -> viewModel.onExplanationButtonClicked()}"
+                android:onClick="@{() -> viewModel.onHelpButtonClicked()}"
                 android:padding="@dimen/default_padding"
                 app:layout_constraintBottom_toBottomOf="@id/absolute_magnitude"
                 app:layout_constraintEnd_toEndOf="parent"

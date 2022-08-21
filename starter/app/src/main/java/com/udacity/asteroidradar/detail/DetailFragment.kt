@@ -1,10 +1,12 @@
 package com.udacity.asteroidradar.detail
 
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.udacity.asteroidradar.R
@@ -15,14 +17,15 @@ class DetailFragment : Fragment() {
     private lateinit var viewModel: DetailViewModel
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val binding = FragmentDetailBinding.inflate(inflater)
         viewModel = ViewModelProvider(this).get(DetailViewModel::class.java)
 
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
+
+        (activity as AppCompatActivity).supportActionBar?.title = getString(R.string.asteroids_details)
 
         val asteroid = DetailFragmentArgs.fromBundle(requireArguments()).selectedAsteroid
         binding.asteroid = asteroid

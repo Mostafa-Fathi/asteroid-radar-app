@@ -1,9 +1,13 @@
 package com.udacity.asteroidradar.api
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import com.udacity.asteroidradar.models.Asteroid
 import com.udacity.asteroidradar.utils.Constants
+import com.udacity.asteroidradar.api.RetrofitHelper.service
+import com.udacity.asteroidradar.local.DatabaseAsteroid
 import com.udacity.asteroidradar.models.PictureOfDay
-import com.udacity.asteroidradar.database.DatabaseAsteroid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -11,6 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
+@RequiresApi(Build.VERSION_CODES.N)
 fun parseAsteroidsJsonResult(jsonResult: JSONObject): ArrayList<Asteroid> {
     val nearEarthObjectsJson = jsonResult.getJSONObject("near_earth_objects")
 
@@ -18,7 +23,7 @@ fun parseAsteroidsJsonResult(jsonResult: JSONObject): ArrayList<Asteroid> {
 
     val nextSevenDaysFormattedDates = getNextSevenDaysFormattedDates()
     for (formattedDate in nextSevenDaysFormattedDates) {
-        if (nearEarthObjectsJson.optJSONArray(formattedDate) != null) {
+        if (nearEarthObjectsJson.has(formattedDate)) {
             val dateAsteroidJsonArray = nearEarthObjectsJson.getJSONArray(formattedDate)
 
             for (i in 0 until dateAsteroidJsonArray.length()) {
@@ -38,10 +43,8 @@ fun parseAsteroidsJsonResult(jsonResult: JSONObject): ArrayList<Asteroid> {
                 val isPotentiallyHazardous = asteroidJson
                     .getBoolean("is_potentially_hazardous_asteroid")
 
-                val asteroid = Asteroid(
-                    id, codename, formattedDate, absoluteMagnitude,
-                    estimatedDiameter, relativeVelocity, distanceFromEarth, isPotentiallyHazardous
-                )
+                val asteroid = Asteroid(id, codename, formattedDate, absoluteMagnitude,
+                    estimatedDiameter, relativeVelocity, distanceFromEarth, isPotentiallyHazardous)
                 asteroidList.add(asteroid)
             }
         }
@@ -50,35 +53,53 @@ fun parseAsteroidsJsonResult(jsonResult: JSONObject): ArrayList<Asteroid> {
     return asteroidList
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 private fun getNextSevenDaysFormattedDates(): ArrayList<String> {
     val formattedDateList = ArrayList<String>()
 
     val calendar = Calendar.getInstance()
     for (i in 0..Constants.DEFAULT_END_DATE_DAYS) {
-        formattedDateList.add(formatDate(calendar.time))
+        val currentTime = calendar.time
+        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
+        formattedDateList.add(dateFormat.format(currentTime))
         calendar.add(Calendar.DAY_OF_YEAR, 1)
     }
 
     return formattedDateList
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 fun getToday(): String {
     val calendar = Calendar.getInstance()
     return formatDate(calendar.time)
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 fun getSeventhDay(): String {
     val calendar = Calendar.getInstance()
     calendar.add(Calendar.DAY_OF_YEAR, 7)
     return formatDate(calendar.time)
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 private fun formatDate(date: Date): String {
     val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
     return dateFormat.format(date)
 }
 
-fun ArrayList<Asteroid>.asDomainModel(): Array<DatabaseAsteroid> {
+suspend fun getPictureOfDay(): PictureOfDay? {
+    var pictureOfDay: PictureOfDay
+    withContext(Dispatchers.IO) {
+        pictureOfDay = service.getPictureOfDayAsync().await()
+    }
+    Log.e("getPictureOfDay",pictureOfDay.media_type+" "+pictureOfDay.url)
+    if (pictureOfDay.media_type == Constants.IMAGE_MEDIA_TYPE) {
+        return pictureOfDay
+    }
+    return null
+}
+
+fun ArrayList<Asteroid>.asDatabaseModel(): Array<DatabaseAsteroid> {
     return map {
         DatabaseAsteroid(
             id = it.id,
@@ -92,15 +113,4 @@ fun ArrayList<Asteroid>.asDomainModel(): Array<DatabaseAsteroid> {
         )
     }
         .toTypedArray()
-}
-
-suspend fun getPictureOfDay(): PictureOfDay? {
-    var pictureOfDay: PictureOfDay
-    withContext(Dispatchers.IO) {
-        pictureOfDay = Network.service.getPictureOfDayAsync().await()
-    }
-    if (pictureOfDay.mediaType == Constants.IMAGE_MEDIA_TYPE) {
-        return pictureOfDay
-    }
-    return null
 }

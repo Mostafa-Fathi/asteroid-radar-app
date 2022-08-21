@@ -7,8 +7,8 @@ import android.os.Build
 import androidx.work.*
 import com.udacity.asteroidradar.utils.Constants.DELETE_ASTEROIDS_WORK_NAME
 import com.udacity.asteroidradar.utils.Constants.REFRESH_ASTEROIDS_WORK_NAME
-import com.udacity.asteroidradar.work.DeleteDataWork
-import com.udacity.asteroidradar.work.RefreshDataWork
+import com.udacity.asteroidradar.workManager.DeletePrevDataWorker
+import com.udacity.asteroidradar.workManager.RefreshDataWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,18 +20,14 @@ class AsteroidRadarApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        delayedInit()
-    }
-
-    private fun delayedInit() {
         applicationScope.launch {
-            setupRecurringWork()
+            setupWorkers()
         }
     }
 
-    private fun setupRecurringWork() {
+    private fun setupWorkers() {
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.UNMETERED)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .setRequiresCharging(true)
             .apply {
@@ -40,28 +36,14 @@ class AsteroidRadarApplication : Application() {
                 }
             }.build()
 
-        val repeatingRefreshRequest = PeriodicWorkRequestBuilder<RefreshDataWork>(
-            // once a day
-            1,
-            TimeUnit.DAYS
-        ).setConstraints(constraints)
-            .build()
+        val repeatingRefreshRequest = PeriodicWorkRequestBuilder<RefreshDataWorker>(
+            1, TimeUnit.DAYS).setConstraints(constraints).build()
         WorkManager.getInstance().enqueueUniquePeriodicWork(
-            REFRESH_ASTEROIDS_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, // keep - will disregard the new request
-            repeatingRefreshRequest
-        )
+            REFRESH_ASTEROIDS_WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, repeatingRefreshRequest)
 
-        val repeatingDeleteRequest = PeriodicWorkRequestBuilder<DeleteDataWork>(
-            // once a day
-            1,
-            TimeUnit.DAYS
-        ).setConstraints(constraints)
-            .build()
+        val repeatingDeleteRequest = PeriodicWorkRequestBuilder<DeletePrevDataWorker>(
+            1, TimeUnit.DAYS).setConstraints(constraints).build()
         WorkManager.getInstance().enqueueUniquePeriodicWork(
-            DELETE_ASTEROIDS_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, // keep - will disregard the new request
-            repeatingDeleteRequest
-        )
+            DELETE_ASTEROIDS_WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, repeatingDeleteRequest)
     }
 }

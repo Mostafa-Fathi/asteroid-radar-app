@@ -5,6 +5,9 @@
     <color name="colorAccent">#FF8282</color>
     <color name="app_background">#010613</color>
     <color name="default_text_color">#FFFFFF</color>
-    <color name="potentially_hazardous">#FF8282</color>
-    <color name="background_gray">#55010613</color>
+    <color name="text_grey">#D2D2D2</color>
+    <color name="potentially_hazardous">#D50000</color>
+    <color name="background_gray">#7E7A7A</color>
+
+
 </resources>

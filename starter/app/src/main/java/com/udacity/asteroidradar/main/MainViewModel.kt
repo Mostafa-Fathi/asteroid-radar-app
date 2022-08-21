@@ -1,18 +1,20 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
-import com.udacity.asteroidradar.models.Asteroid
-import com.udacity.asteroidradar.models.PictureOfDay
+import kotlinx.coroutines.flow.collect
 import com.udacity.asteroidradar.api.getPictureOfDay
 import com.udacity.asteroidradar.api.getSeventhDay
 import com.udacity.asteroidradar.api.getToday
-import com.udacity.asteroidradar.database.AsteroidDatabase
-import com.udacity.asteroidradar.repository.AsteroidRepository
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import java.lang.Exception
+import com.udacity.asteroidradar.local.AsteroidDatabase
+import com.udacity.asteroidradar.models.Asteroid
+import com.udacity.asteroidradar.models.PictureOfDay
+import com.udacity.asteroidradar.repo.AsteroidRepository
+import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.N)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AsteroidDatabase.getDatabase(application)
@@ -63,29 +65,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _displaySnackbarEvent.value = false
     }
 
+
     fun onViewWeekAsteroidsClicked() {
         viewModelScope.launch {
             database.asteroidDao.getAsteroidsByCloseApproachDate(getToday(), getSeventhDay())
-                .collect { asteroids ->
-                    _asteroids.value = asteroids
-                }
+                .collect { asteroids -> _asteroids.value = asteroids }
         }
     }
 
     fun onTodayAsteroidsClicked() {
         viewModelScope.launch {
             database.asteroidDao.getAsteroidsByCloseApproachDate(getToday(), getToday())
-                .collect { asteroids ->
-                    _asteroids.value = asteroids
-                }
+                .collect { asteroids -> _asteroids.value = asteroids }
         }
     }
 
     fun onSavedAsteroidsClicked() {
         viewModelScope.launch {
-            database.asteroidDao.getAllAsteroids().collect { asteroids ->
-                _asteroids.value = asteroids
-            }
+            database.asteroidDao.getAllAsteroids()
+                .collect { asteroids -> _asteroids.value = asteroids }
         }
     }
 }

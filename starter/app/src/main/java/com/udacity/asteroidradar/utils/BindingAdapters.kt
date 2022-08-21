@@ -1,5 +1,6 @@
 package com.udacity.asteroidradar.utils
 
+import android.graphics.Color
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
@@ -17,6 +18,16 @@ fun bindAsteroidStatusImage(imageView: ImageView, isHazardous: Boolean) {
     } else {
         imageView.setImageResource(R.drawable.ic_status_normal)
         imageView.contentDescription = context.getString(R.string.not_hazardous_asteroid_image)
+    }
+}
+@BindingAdapter(value = ["bind:asteroidName","bind:isHazardous"], requireAll = false)
+fun bindTextViewToAsteroidsName(textView: TextView, name: String, isHazardous: Boolean) {
+    val context = textView.context
+    textView.text = name
+    if (isHazardous){
+        textView.setTextColor(Color.RED)
+    }else{
+        textView.setTextColor(Color.WHITE)
     }
 }
 
@@ -63,12 +74,8 @@ fun bindPictureOfDay(imageView: ImageView, pictureOfDay: PictureOfDay?) {
             .centerCrop()
             .into(imageView)
 
-        val contentDescription =
-            String.format(
-                context.getString(R.string.nasa_picture_of_day_content_description_format),
-                pictureOfDay.title
-            )
-        imageView.contentDescription = contentDescription
+        imageView.contentDescription =
+            String.format(context.getString(R.string.nasa_picture_of_day_content_description_format), pictureOfDay.title)
     } else {
         imageView.setImageResource(R.drawable.no_image_available)
         imageView.scaleType = ImageView.ScaleType.CENTER_INSIDE

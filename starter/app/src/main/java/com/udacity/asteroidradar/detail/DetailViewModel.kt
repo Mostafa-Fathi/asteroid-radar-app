@@ -8,9 +8,9 @@ class DetailViewModel: ViewModel() {
 
     private val _displayExplanationDialog = MutableLiveData<Boolean>()
     val displayExplanationDialog: LiveData<Boolean>
-    get() = _displayExplanationDialog
+        get() = _displayExplanationDialog
 
-    fun onExplanationButtonClicked(){
+    fun onHelpButtonClicked(){
         _displayExplanationDialog.value = true
     }
 
